@@ -15,6 +15,7 @@ callbacks:
 buttons:
     codeblock:
         image: images/codeblock.png
+        title: encode HTML and wrap the selection by 'pre class="code"'
         code: |
             function ceb_codeblock ( text ) {
                 text = text.replace(/&/g, "&amp;");

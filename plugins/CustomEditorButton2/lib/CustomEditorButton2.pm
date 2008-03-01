@@ -22,8 +22,9 @@ sub build_buttons {
         my $btn = $btns->{$btn_id};
         $code .= $btn->{code} . "\n\n";
         my $img_path = $btn->{plugin}->envelope . '/' . $btn->{image};
-        $btns{$btn_id} = { id   => $btn_id,
-                           img  => $img_path,
+        $btns{$btn_id} = { id    => $btn_id,
+                           img   => $img_path,
+                           title => $btn->{title},
                          };
     }
     my $btn_json = objToJson(\%btns);
@@ -79,16 +80,17 @@ var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'} };
 
 MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
     if( BTNS[command] || SYS_BTNS[command] ) {
-        var text = (this.editor.mode == "iframe")
-                     ? this.editor.iframe.getSelection()
-                     : this.editor.textarea.getSelectedText();
+        var iframe = this.editor.mode == "iframe";
+        var text = iframe ? this.editor.iframe.getSelection()
+                          : this.editor.textarea.getSelectedText();
         if ( !defined( text ) )
             text = '';
         else
             text = text.toString();
         var funcname = 'ceb_' + command;
         var func = eval( funcname );
-        var res = func(text);
+        var args = { 'iframe': iframe };
+        var res = func(text, args);
         if ( defined( res ) )
             this.editor.insertHTML( res );
     }
@@ -105,8 +107,6 @@ function build_buttons() {
         var id = BTN_ORDER[i];
         var btn_data = BTNS[id];
         var btn = document.createElement('a');
-        btn.btn_id = btn_data.id;
-        btn.btn_order = i;
         btn.innerHTML = btn_data.id;
         DOM.addClassName(btn, 'command-' + btn_data.id);
         DOM.addClassName(btn, 'toolbar');
@@ -114,6 +114,9 @@ function build_buttons() {
         DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
         btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
         btn.setAttribute('href', 'javascript: void 0;');
+        btn.setAttribute('title', btn_data.title);
+        btn.btn_id = btn_data.id;
+        btn.btn_order = i;
         div.appendChild(btn);
     }
 
