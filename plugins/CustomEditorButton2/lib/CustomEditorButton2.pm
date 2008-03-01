@@ -225,7 +225,7 @@ function save_ceb_prefs() {
 }
 
 function ceb_prefs_saved(c, r) {
-
+    BTN_ORDER_CHANGED = 0;
 }
 
 TC.attachLoadEvent( init_buttons );
