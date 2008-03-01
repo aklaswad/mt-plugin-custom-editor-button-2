@@ -6,6 +6,10 @@ author_name: Aklaswad
 description: Customizable Buttons add to Entry Editor.
 version: 2.0
 plugin_link: http://blog.aklaswad.com/mtplugins/CustomEditorButton2/
+applications:
+    cms:
+        methods:
+            save_ceb_prefs: $CustomEditorButton2::CustomEditorButton2::save_prefs
 callbacks:
     MT::App::CMS::template_output.edit_entry: $CustomEditorButton2::CustomEditorButton2::transformer
 buttons:

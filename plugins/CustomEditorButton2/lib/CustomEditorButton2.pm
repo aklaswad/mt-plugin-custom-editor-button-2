@@ -1,6 +1,16 @@
 package CustomEditorButton2;
 use strict;
 use JSON;
+use MT::Author;
+
+# Say hey, but we really just wanted the module loaded.
+sub init_app { 1 }
+
+MT::Author->install_meta({
+    columns => [
+        'ceb_order',
+    ],
+});
 
 sub build_buttons {
     my $app = shift;
@@ -17,6 +27,8 @@ sub build_buttons {
                            hdlr => 'ceb_' . $btn_id,
                          };
     }
+    $btns{save_ceb_prefs} = { id => 'save_ceb_prefs',
+                              hdlr => 'save_ceb_prefs', };
     my $btn_json = objToJson(\%btns);
     my $order = get_order($app, $btns);
     my $order_json = objToJson($order);
@@ -27,8 +39,13 @@ sub build_buttons {
 sub get_order {
     my ($app, $btns) = @_;
     my @order;
-    foreach my $btn_id (keys %$btns) {
-        push @order, $btn_id;
+    if (my $saved = $app->user->meta('ceb_button_order')) {
+        @order = split /:/, $saved;
+    }
+    else{
+        foreach my $btn_id (keys %$btns) {
+            push @order, $btn_id;
+        }
     }
     return \@order;
 }
@@ -42,6 +59,14 @@ sub transformer {
     my $end_block = '</script>';
     my $txt = $begin_block . build_buttons($app) . "$end_block@lines";
     $$tmpl_ref =~ s!</head>!$txt</head>!;
+}
+
+sub save_prefs {
+    my $app = shift;
+    my $order = $app->param('order');
+    $app->user->meta('ceb_button_order', $order);
+    $app->user->save;
+    $app->json_result({}); 
 }
 
 1;
@@ -92,6 +117,16 @@ function build_buttons() {
         btn.setAttribute('href', 'javascript: void 0;');
         div.appendChild(btn);
     }
+
+    var sv = document.createElement('a');
+    sv.btn_id = 'save_ceb_prefs';
+    DOM.addClassName(sv, 'command-save_ceb_prefs');
+    DOM.addClassName(sv, 'toolbar');
+    DOM.addClassName(sv, 'ceb-button');
+    DOM.addClassName(sv, 'ceb-system-button');
+    sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_pref.png)';
+    sv.setAttribute('href', 'javascript: void 0;');
+    div.appendChild(sv);
     return div;
 }
 
@@ -169,6 +204,27 @@ function init_buttons() {
     parent.appendChild(content);
 }
 
+function save_ceb_prefs() {
+    var order = BTN_ORDER[0];
+    for (var i = 1; i<BTN_ORDER.length;i++) {
+        order += ':' + BTN_ORDER[i];
+    }
+    var args = { 'order': order,
+                 '__mode': 'save_ceb_prefs',
+                 'magic_token': '<mt:var name="magic_token">' };
+    TC.Client.call({
+        'load': ceb_prefs_saved,
+        'error': function() {alert('error saving button prefs')},
+        'method': 'POST',
+        'uri': ScriptURI,
+        'arguments': args
+    });
+}
+
+function ceb_prefs_saved(c, r) {
+
+}
+
 TC.attachLoadEvent( init_buttons );
 
 </script>
@@ -194,6 +250,10 @@ a.ceb-button {
     -moz-user-focus: none !important;
     -moz-outline: none !important;
     -khtml-user-select: none !important;
+}
+
+a.ceb-system-button {
+    float: right;
 }
 
 </style>
