@@ -85,6 +85,8 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
                  : this.editor.textarea.getSelectedText();
     if ( !defined( text ) )
         text = '';
+    else
+        text = text.toString();
     if(BTNS[command]) {
         var funcname = BTNS[command].hdlr;
         var func = eval( funcname );

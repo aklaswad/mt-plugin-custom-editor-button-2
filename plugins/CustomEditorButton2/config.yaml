@@ -17,6 +17,10 @@ buttons:
         image: images/codeblock.png
         code: |
             function ceb_codeblock ( text ) {
+                text = text.replace(/&/g, "&amp;");
+                text = text.replace(/</g, "&lt;");
+                text = text.replace(/>/g, "&gt;");
+                text = text.replace(/"/g, "&quot;");
                 return '<pre class="code">' + text + '</pre>';
             }
 
