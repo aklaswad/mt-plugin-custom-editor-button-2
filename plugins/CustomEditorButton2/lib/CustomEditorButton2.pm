@@ -124,7 +124,7 @@ function build_buttons() {
     DOM.addClassName(sv, 'toolbar');
     DOM.addClassName(sv, 'ceb-button');
     DOM.addClassName(sv, 'ceb-system-button');
-    sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_pref.png)';
+    sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_prefs.png)';
     sv.setAttribute('href', 'javascript: void 0;');
     div.appendChild(sv);
     return div;
@@ -134,6 +134,7 @@ var DRAGGING;
 var DRAG_START_X;
 var DRAG_START_Y;
 var ORIGINAL_ORDER;
+var BTN_ORDER_CHANGED = 0;
 
 function button_drag_start(evt) {
     DOM.addEventListener(document, 'mouseup', button_drag_end, 1);
@@ -185,6 +186,7 @@ function button_move(btn_id, new_order) {
     }
     BTN_ORDER.splice(new_order,0,btn_id);
     rebuild_buttons();
+    BTN_ORDER_CHANGED = 1;
 }
 
 function dbg (s){
@@ -205,6 +207,7 @@ function init_buttons() {
 }
 
 function save_ceb_prefs() {
+    if (!BTN_ORDER_CHANGED) return;
     var order = BTN_ORDER[0];
     for (var i = 1; i<BTN_ORDER.length;i++) {
         order += ':' + BTN_ORDER[i];
