@@ -2,28 +2,6 @@ package CustomEditorButton2;
 
 use JSON;
 
-sub get_image_url {
-    my ($type, $ndata) = @_;
-
-    my $plug = $ndata->{plugin} or return;
-
-    my $icon_url;
-
-    if ($plug->id eq 'actionstreams') {
-        $icon_url = MT->app->static_path . join q{/}, $plug->envelope,
-            'images', 'services', $type . '.png';
-    }
-    elsif ($ndata->{icon} && $ndata->{icon} =~ m{ \A \w:// }xms) {
-        $icon_url = $ndata->{icon};
-    }
-    elsif ($ndata->{icon}) {
-        $icon_url = MT->app->static_path . join q{/}, $plug->envelope,
-            $ndata->{icon};
-    }
-
-    return $icon_url;
-}
-
 sub build_buttons {
     my $app = shift;
     my $btns = $app->registry('buttons');
