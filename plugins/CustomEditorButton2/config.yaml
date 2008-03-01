@@ -1,0 +1,18 @@
+name: Custom Editor Button 2
+id: Custom Editor Button 2
+key: CustomrEditorButton2
+author_link: http://blog.aklaswad.com/
+author_name: Aklaswad
+description: Customizable Buttons add to Entry Editor.
+version: 2.0
+plugin_link: http://blog.aklaswad.com/mtplugins/CustomEditorButton2/
+callbacks:
+    MT::App::CMS::template_output.edit_entry: $CustomEditorButton2::CustomEditorButton2::transformer
+buttons:
+    codeblock:
+        image: images/codeblock.png
+        code: |
+            function ceb_codeblock ( text ) {
+                return '<pre class="code">' + text + '</pre>';
+            }
+
