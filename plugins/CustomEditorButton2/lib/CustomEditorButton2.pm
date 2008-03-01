@@ -15,25 +15,21 @@ MT::Author->install_meta({
 sub build_buttons {
     my $app = shift;
     my $btns = $app->registry('buttons');
-    my @codes;
+    my $code;
     my %btns;
     my $static_url = $app->config('StaticWebPath');
     foreach my $btn_id (keys %$btns) {
         my $btn = $btns->{$btn_id};
-        push @codes, $btn->{code};
-        my $img_path = $static_url . $btn->{plugin}->envelope . '/' . $btn->{image};
+        $code .= $btn->{code} . "\n\n";
+        my $img_path = $btn->{plugin}->envelope . '/' . $btn->{image};
         $btns{$btn_id} = { id   => $btn_id,
                            img  => $img_path,
-                           hdlr => 'ceb_' . $btn_id,
                          };
     }
-    $btns{save_ceb_prefs} = { id => 'save_ceb_prefs',
-                              hdlr => 'save_ceb_prefs', };
     my $btn_json = objToJson(\%btns);
     my $order = get_order($app, $btns);
     my $order_json = objToJson($order);
-    
-    return "\n@codes\nvar BTNS = $btn_json\nvar BTN_ORDER = $order_json\n";
+    return "\n$code\nvar BTNS = $btn_json\nvar BTN_ORDER = $order_json\n";
 }
 
 sub get_order {
@@ -79,21 +75,22 @@ __DATA__
                            by Aklaswad 2008.
 */
 
+var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'} };
+
 MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
-    var text = (this.editor.mode == "iframe")
-                 ? this.editor.iframe.getSelection()
-                 : this.editor.textarea.getSelectedText();
-    if ( !defined( text ) )
-        text = '';
-    else
-        text = text.toString();
-    if(BTNS[command]) {
-        var funcname = BTNS[command].hdlr;
+    if( BTNS[command] || SYS_BTNS[command] ) {
+        var text = (this.editor.mode == "iframe")
+                     ? this.editor.iframe.getSelection()
+                     : this.editor.textarea.getSelectedText();
+        if ( !defined( text ) )
+            text = '';
+        else
+            text = text.toString();
+        var funcname = 'ceb_' + command;
         var func = eval( funcname );
         var res = func(text);
-        if ( !defined( res ) )
-            res = '';
-        this.editor.insertHTML( res );
+        if ( defined( res ) )
+            this.editor.insertHTML( res );
     }
     else {
         this.editor.execCommand( command );
@@ -115,7 +112,7 @@ function build_buttons() {
         DOM.addClassName(btn, 'toolbar');
         DOM.addClassName(btn, 'ceb-button');
         DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
-        btn.style.backgroundImage = 'url(' + btn_data.img + ')';
+        btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
         btn.setAttribute('href', 'javascript: void 0;');
         div.appendChild(btn);
     }
@@ -145,7 +142,6 @@ function button_drag_start(evt) {
     ORIGINAL_ORDER = this.btn_order;
     DRAG_START_X = evt.pageX;
     DRAG_START_Y = evt.pageY;
-    dbg(DRAGGING);
     return true;
 }
 
@@ -153,7 +149,6 @@ function button_drag_move(evt) {
     var box = getByID('ceb-container');
     var x = evt.clientX - box.offsetLeft;
     var y = evt.clientY - box.offsetTop;
-    dbg(DRAGGING + ': ' + x + ':' + y);
     return false;
 }
 
@@ -191,10 +186,6 @@ function button_move(btn_id, new_order) {
     BTN_ORDER_CHANGED = 1;
 }
 
-function dbg (s){
-    getByID('title').value = s;
-}
-
 function rebuild_buttons() {
     var content = build_buttons();
     var parent = getByID('editor-content-toolbar');
@@ -208,15 +199,15 @@ function init_buttons() {
     parent.appendChild(content);
 }
 
-function save_ceb_prefs() {
+function ceb_save_ceb_prefs() {
     if (!BTN_ORDER_CHANGED) return;
     var order = BTN_ORDER[0];
     for (var i = 1; i<BTN_ORDER.length;i++) {
         order += ':' + BTN_ORDER[i];
     }
+    //TODO: get magic token from other form.
     var args = { 'order': order,
-                 '__mode': 'save_ceb_prefs',
-                 'magic_token': '<mt:var name="magic_token">' };
+                 '__mode': 'save_ceb_prefs' };
     TC.Client.call({
         'load': ceb_prefs_saved,
         'error': function() {alert('error saving button prefs')},
