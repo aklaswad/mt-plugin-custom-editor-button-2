@@ -1,5 +1,5 @@
 package CustomEditorButton2;
-
+use strict;
 use JSON;
 
 sub build_buttons {
@@ -18,7 +18,19 @@ sub build_buttons {
                          };
     }
     my $btn_json = objToJson(\%btns);
-    return "\n@codes\nvar BTNS = $btn_json";
+    my $order = get_order($app, $btns);
+    my $order_json = objToJson($order);
+    
+    return "\n@codes\nvar BTNS = $btn_json\nvar BTN_ORDER = $order_json\n";
+}
+
+sub get_order {
+    my ($app, $btns) = @_;
+    my @order;
+    foreach my $btn_id (keys %$btns) {
+        push @order, $btn_id;
+    }
+    return \@order;
 }
 
 sub transformer {
@@ -63,14 +75,19 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
 
 function build_buttons() {
     var div = document.createElement('div');
+    div.id = "ceb-container";
     DOM.addClassName(div, 'ceb-container');
-    for (var id in BTNS){
+    for (var i = 0;i<BTN_ORDER.length;i++) {
+        var id = BTN_ORDER[i];
         var btn_data = BTNS[id];
         var btn = document.createElement('a');
+        btn.btn_id = btn_data.id;
+        btn.btn_order = i;
         btn.innerHTML = btn_data.id;
         DOM.addClassName(btn, 'command-' + btn_data.id);
         DOM.addClassName(btn, 'toolbar');
         DOM.addClassName(btn, 'ceb-button');
+        DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
         btn.style.backgroundImage = 'url(' + btn_data.img + ')';
         btn.setAttribute('href', 'javascript: void 0;');
         div.appendChild(btn);
@@ -78,13 +95,81 @@ function build_buttons() {
     return div;
 }
 
-function init_customeditorbutton() {
+var DRAGGING;
+var DRAG_START_X;
+var DRAG_START_Y;
+var ORIGINAL_ORDER;
+
+function button_drag_start(evt) {
+    DOM.addEventListener(document, 'mouseup', button_drag_end, 1);
+    DOM.addEventListener(document, 'mousemove', button_drag_move, 1);
+    DRAGGING = this.btn_id;
+    ORIGINAL_ORDER = this.btn_order;
+    DRAG_START_X = evt.pageX;
+    DRAG_START_Y = evt.pageY;
+    dbg(DRAGGING);
+    return true;
+}
+
+function button_drag_move(evt) {
+    var box = getByID('ceb-container');
+    var x = evt.clientX - box.offsetLeft;
+    var y = evt.clientY - box.offsetTop;
+    dbg(DRAGGING + ': ' + x + ':' + y);
+    return false;
+}
+
+function button_drag_end(evt) {
+    DOM.removeEventListener(document, 'mouseup', button_drag_end, 1);
+    DOM.removeEventListener(document, 'mousemove', button_drag_move, 1);
+    if(!DRAGGING) return true;
+    if (DRAG_START_X == evt.pageX && DRAG_START_Y == evt.pageY){
+        DRAGGING = null;
+        return true;
+    }
+    var btn_id = DRAGGING;
+    DRAGGING = null;
+    var box = DOM.getDimensions(getByID('ceb-container'));
+    var x = evt.pageX - box.offsetLeft;
+    var y = evt.pageY - box.offsetTop;
+    if ( x < 0 || box.offsetWidth < x || y < 0 || box.offsetHeight < y )
+        return false;
+    var new_order = Math.floor(x / 24 + 0.5);
+    if (ORIGINAL_ORDER < new_order) new_order--;
+    if (ORIGINAL_ORDER != new_order)
+        button_move(btn_id, new_order);
+    return false;
+}
+
+function button_move(btn_id, new_order) {
+    for(var i=0;i<BTN_ORDER.length;i++) {
+        if (BTN_ORDER[i] == btn_id){
+            BTN_ORDER.splice(i,1);
+            break;
+        }
+    }
+    BTN_ORDER.splice(new_order,0,btn_id);
+    rebuild_buttons();
+}
+
+function dbg (s){
+    getByID('title').value = s;
+}
+
+function rebuild_buttons() {
+    var content = build_buttons();
+    var parent = getByID('editor-content-toolbar');
+    parent.removeChild(getByID('ceb-container'));
+    parent.appendChild(content);
+}
+
+function init_buttons() {
     var content = build_buttons();
     var parent = getByID('editor-content-toolbar');
     parent.appendChild(content);
 }
 
-TC.attachLoadEvent( init_customeditorbutton );
+TC.attachLoadEvent( init_buttons );
 
 </script>
 <style type="text/css">
