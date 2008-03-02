@@ -38,6 +38,7 @@ sub get_order {
     my @order;
     if (my $saved = $app->user->meta('ceb_button_order')) {
         @order = split /:/, $saved;
+        @order = grep { exists $btns->{$_} } @order;
         my %ordered = map { $_ => 1 } @order;
         foreach my $btn_id (keys %$btns) {
             push @order, $btn_id unless $ordered{$btn_id};
