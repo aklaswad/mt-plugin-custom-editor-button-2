@@ -13,6 +13,13 @@ applications:
 callbacks:
     MT::App::CMS::template_output.edit_entry: $CustomEditorButton2::CustomEditorButton2::transformer
 buttons:
+    prebutton:
+        image: images/pre.png
+        title: wrap selection with 'pre' tag
+        code: |
+            function ceb_prebutton ( text ) {
+                return '<pre>' + text + '</pre>';
+            }
     codeblock:
         image: images/codeblock.png
         title: encode HTML and wrap the selection by 'pre class="code"'
@@ -23,5 +30,36 @@ buttons:
                 text = text.replace(/>/g, "&gt;");
                 text = text.replace(/"/g, "&quot;");
                 return '<pre class="code">' + text + '</pre>';
+            }
+    insertbutton:
+        image: images/ins.png
+        title: wrap selection with 'ins' tag
+        code: |
+            function getISO8601String(){
+                function zp(num){
+                    if(num < 10){num = '0' + num;}
+                    return num;
+                }
+                var d,yy,mm,dd,hr,mn,sc,tz,isotime;
+                d = new Date();
+                yy = d.getFullYear();
+                mm = zp(d.getMonth()+1);
+                dd = zp(d.getDate());
+                hr = zp(d.getHours());
+                mn = zp(d.getMinutes());
+                sc = zp(d.getSeconds());
+                tz = zp(( d.getHours() - d.getUTCHours() + 24 ) % 24);
+                return yy + '-' + mm + '-' + dd + 'T' + hr + ':' + mn + ':' + sc + '+' + tz + ':00';
+            }
+
+            function ceb_insertbutton ( text ) {
+                return '<ins datetime="' + getISO8601String() + '">' + text + '</ins>';
+            }
+    deletebutton:
+        image: images/del.png
+        title: wrap selection with 'del' tag
+        code: |
+            function ceb_deletebutton ( text ) {
+                return '<del datetime="' + getISO8601String() + '">' + text + '</del>';
             }
 
