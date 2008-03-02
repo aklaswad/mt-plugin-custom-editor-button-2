@@ -2,10 +2,10 @@ name: Custom Editor Button 2
 id: Custom Editor Button 2
 key: CustomrEditorButton2
 author_link: http://blog.aklaswad.com/
-author_name: Aklaswad
-description: Customizable Buttons add to Entry Editor.
+author_name: aklaswad
+description: add user buttons to cms entry/page editor.
 version: 0.1
-plugin_link: http://blog.aklaswad.com/mtplugins/CustomEditorButton2/
+plugin_link: http://blog.aklaswad.com/mtplugins/customeditorbutton2/
 applications:
     cms:
         methods:
