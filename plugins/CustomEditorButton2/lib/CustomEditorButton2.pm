@@ -58,7 +58,7 @@ sub transformer {
     my $txt = $begin_block . build_buttons($app) . "$end_block@lines";
     $$tmpl_ref =~ s!</head>!$txt</head>!;
 
-    $$tmpl_ref =~ s!</body>!<div id="ceb-sysmessage-container"></body>!;
+    $$tmpl_ref =~ s!</body>!<div id="ceb-sysmessage-container"><a id="dragging-button" class="hidden"></a></body>!;
 }
 
 sub save_prefs {
@@ -183,6 +183,8 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
 var DRAGGING;
 var DRAG_START_X;
 var DRAG_START_Y;
+var DRAG_LAYER_X;
+var DRAG_LAYER_Y;
 var ORIGINAL_ORDER;
 var BTN_ORDER_CHANGED = 0;
 
@@ -193,19 +195,26 @@ function button_drag_start(evt) {
     ORIGINAL_ORDER = this.btn_order;
     DRAG_START_X = evt.pageX;
     DRAG_START_Y = evt.pageY;
+    DRAG_LAYER_X = evt.layerX;
+    DRAG_LAYER_Y = evt.layerY;
     return true;
 }
 
 function button_drag_move(evt) {
-    var box = getByID('ceb-container');
-    var x = evt.clientX - box.offsetLeft;
-    var y = evt.clientY - box.offsetTop;
+    if ( DRAGGING ) {
+        var img = getByID('dragging-button');
+        img.style.backgroundImage = 'url(' + StaticURI + BTNS[DRAGGING].img + ')'; 
+        DOM.removeClassName(img, 'hidden');
+        img.style.left = (evt.pageX - DRAG_LAYER_X) + 'px';
+        img.style.top = (evt.pageY - DRAG_LAYER_Y) + 'px';
+    }
     return false;
 }
 
 function button_drag_end(evt) {
     DOM.removeEventListener(document, 'mouseup', button_drag_end, 1);
     DOM.removeEventListener(document, 'mousemove', button_drag_move, 1);
+    DOM.addClassName(getByID('dragging-button'), 'hidden');
     if(!DRAGGING) return true;
     if (DRAG_START_X == evt.pageX && DRAG_START_Y == evt.pageY){
         DRAGGING = null;
@@ -213,15 +222,17 @@ function button_drag_end(evt) {
     }
     var btn_id = DRAGGING;
     DRAGGING = null;
+    x = evt.pageX - DRAG_LAYER_X;
+    y = evt.pageY - DRAG_LAYER_Y;
     var container_dim = DOM.getDimensions(getByID('ceb-container'));
-    if (is_inside_of_element(evt.pageX, evt.pageY, container_dim)) {
+    if (is_inside_of_element(x, y, container_dim)) {
         var box_dim = DOM.getDimensions(getByID('ceb-box-button'));
-        if (is_inside_of_element(evt.pageX, evt.pageY, box_dim)) {
+        if (is_inside_of_element(x, y, box_dim)) {
             remove_button(btn_id);
         }
         else {
-            var x = evt.pageX - container_dim.offsetLeft;
-            var new_order = Math.floor( x / 24 + 0.5);
+            var xx = x - container_dim.offsetLeft;
+            var new_order = Math.floor( xx / 24 + 0.5);
             if (ORIGINAL_ORDER < new_order) new_order--;
             if (ORIGINAL_ORDER != new_order)
                 move_button(btn_id, new_order);
@@ -233,7 +244,7 @@ function button_drag_end(evt) {
 function is_inside_of_element(x, y, dim) {
     var xx = x - dim.offsetLeft;
     var yy = y - dim.offsetTop;
-    if ( xx < 0 || dim.offsetWidth < xx || yy < 0 || dim.offsetHeight < yy )
+    if ( xx < -22 || dim.offsetWidth < xx || yy < -22 || dim.offsetHeight < yy )
         return false;
     return true;
 }
@@ -432,6 +443,13 @@ a.ceb-button {
 
 a.ceb-system-button {
     float: right;
+}
+
+#dragging-button {
+    width: 22px;
+    height: 22px;
+    position: fixed;
+    z-index: 10001;
 }
 
 #ceb-sysmessage-container {
