@@ -39,10 +39,6 @@ sub get_order {
     if (my $saved = $app->user->meta('ceb_button_order')) {
         @order = split /:/, $saved;
         @order = grep { exists $btns->{$_} } @order;
-        my %ordered = map { $_ => 1 } @order;
-        foreach my $btn_id (keys %$btns) {
-            push @order, $btn_id unless $ordered{$btn_id};
-        }
     }
     else{
         foreach my $btn_id (keys %$btns) {
@@ -84,7 +80,7 @@ __DATA__
 */
 
 var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'},
-                 'ceb_box': { id: 'ceb_box'} };
+                 'toggle_box': { id: 'toggle_box'} };
 
 /*    Utilities    */
 
@@ -114,6 +110,9 @@ function ceb_sysmessage (message, timeout) {
     }
     setTimeout(remover, timeout * 1000);
 }
+
+
+/* Command Handler */
 
 MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
     if( BTNS[command] || SYS_BTNS[command] ) {
@@ -179,49 +178,7 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
     }
 };
 
-function build_buttons() {
-    var div = document.createElement('div');
-    div.id = "ceb-container";
-    DOM.addClassName(div, 'ceb-container');
-    for (var i = 0;i<BTN_ORDER.length;i++) {
-        var id = BTN_ORDER[i];
-        var btn_data = BTNS[id];
-        var btn = document.createElement('a');
-        btn.innerHTML = btn_data.id;
-        DOM.addClassName(btn, 'command-' + btn_data.id);
-        DOM.addClassName(btn, 'toolbar');
-        DOM.addClassName(btn, 'ceb-button');
-        DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
-        btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
-        btn.setAttribute('href', 'javascript: void 0;');
-        btn.setAttribute('title', btn_data.title);
-        btn.btn_id = btn_data.id;
-        btn.btn_order = i;
-        div.appendChild(btn);
-    }
-
-    var sv = document.createElement('a');
-    sv.btn_id = 'save_ceb_prefs';
-    DOM.addClassName(sv, 'command-save_ceb_prefs');
-    DOM.addClassName(sv, 'toolbar');
-    DOM.addClassName(sv, 'ceb-button');
-    DOM.addClassName(sv, 'ceb-system-button');
-    sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_prefs.png)';
-    sv.setAttribute('href', 'javascript: void 0;');
-    div.appendChild(sv);
-
-    var bx = document.createElement('a');
-    bx.btn_id = 'ceb_box';
-    DOM.addClassName(bx, 'command-toggle_box');
-    DOM.addClassName(bx, 'toolbar');
-    DOM.addClassName(bx, 'ceb-button');
-    DOM.addClassName(bx, 'ceb-system-button');
-    bx.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/ceb_box.png)';
-    bx.setAttribute('href', 'javascript: void 0;');
-    div.appendChild(bx);
-
-    return div;
-}
+/*   Drag and drop system   */
 
 var DRAGGING;
 var DRAG_START_X;
@@ -256,35 +213,148 @@ function button_drag_end(evt) {
     }
     var btn_id = DRAGGING;
     DRAGGING = null;
-    var box = DOM.getDimensions(getByID('ceb-container'));
-    var x = evt.pageX - box.offsetLeft;
-    var y = evt.pageY - box.offsetTop;
-    if ( x < 0 || box.offsetWidth < x || y < 0 || box.offsetHeight < y )
-        return false;
-    var new_order = Math.floor(x / 24 + 0.5);
-    if (ORIGINAL_ORDER < new_order) new_order--;
-    if (ORIGINAL_ORDER != new_order)
-        button_move(btn_id, new_order);
+    var container_dim = DOM.getDimensions(getByID('ceb-container'));
+    if (is_inside_of_element(evt.pageX, evt.pageY, container_dim)) {
+        var box_dim = DOM.getDimensions(getByID('ceb-box-button'));
+        if (is_inside_of_element(evt.pageX, evt.pageY, box_dim)) {
+            remove_button(btn_id);
+        }
+        else {
+            var x = evt.pageX - container_dim.offsetLeft;
+            var new_order = Math.floor( x / 24 + 0.5);
+            if (ORIGINAL_ORDER < new_order) new_order--;
+            if (ORIGINAL_ORDER != new_order)
+                move_button(btn_id, new_order);
+        }
+    }
     return false;
 }
 
-function button_move(btn_id, new_order) {
+function is_inside_of_element(x, y, dim) {
+    var xx = x - dim.offsetLeft;
+    var yy = y - dim.offsetTop;
+    if ( xx < 0 || dim.offsetWidth < xx || yy < 0 || dim.offsetHeight < yy )
+        return false;
+    return true;
+}
+
+function move_button(btn_id, new_order) {
+    var rmv = false;
     for(var i=0;i<BTN_ORDER.length;i++) {
         if (BTN_ORDER[i] == btn_id){
             BTN_ORDER.splice(i,1);
+            rmv = true;
             break;
         }
     }
-    BTN_ORDER.splice(new_order,0,btn_id);
-    rebuild_buttons();
-    BTN_ORDER_CHANGED = 1;
+    var ins = defined(new_order);
+    if (ins) {
+        BTN_ORDER.splice(new_order,0,btn_id);
+    }
+    if (ins || rmv) {
+        rebuild_buttons();
+        BTN_ORDER_CHANGED = 1;
+    }
 }
 
+function remove_button(btn_id) {
+    move_button(btn_id, undefined);
+}
+
+function insert_button(btn_id, new_order) {
+    move_button(btn_id, new_order);
+}
+
+/*   Button Initializers   */
+
+function build_buttons() {
+    var div = document.createElement('div');
+    div.id = "ceb-container";
+    DOM.addClassName(div, 'ceb-container');
+    for (var i = 0;i<BTN_ORDER.length;i++) {
+        var id = BTN_ORDER[i];
+        var btn_data = BTNS[id];
+        var btn = document.createElement('a');
+        btn.innerHTML = btn_data.id;
+        DOM.addClassName(btn, 'command-' + btn_data.id);
+        DOM.addClassName(btn, 'toolbar');
+        DOM.addClassName(btn, 'ceb-button');
+        DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
+        btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
+        btn.setAttribute('href', 'javascript: void 0;');
+        btn.setAttribute('title', btn_data.title);
+        btn.btn_id = btn_data.id;
+        btn.btn_order = i;
+        div.appendChild(btn);
+    }
+
+    var sv = document.createElement('a');
+    sv.btn_id = 'save_ceb_prefs';
+    DOM.addClassName(sv, 'command-save_ceb_prefs');
+    DOM.addClassName(sv, 'toolbar');
+    DOM.addClassName(sv, 'ceb-button');
+    DOM.addClassName(sv, 'ceb-system-button');
+    sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_prefs.png)';
+    sv.setAttribute('href', 'javascript: void 0;');
+    div.appendChild(sv);
+
+    var bx = document.createElement('a');
+    bx.btn_id = 'ceb_box';
+    bx.id = 'ceb-box-button';
+    DOM.addClassName(bx, 'command-toggle_box');
+    DOM.addClassName(bx, 'toolbar');
+    DOM.addClassName(bx, 'ceb-button');
+    DOM.addClassName(bx, 'ceb-system-button');
+    bx.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/ceb_box.png)';
+    bx.setAttribute('href', 'javascript: void 0;');
+    div.appendChild(bx);
+
+    return div;
+}
+
+function build_unused_buttons() {
+    var div = document.createElement('div');
+    div.id= "ceb-box";
+    for (var i in BTNS)
+        BTNS[i].disp = 0;
+    for (var i=0;i<BTN_ORDER.length;i++) {
+        BTNS[BTN_ORDER[i]].disp = 1;
+    }
+    for (var i in BTNS) {
+        var btn_data = BTNS[i];
+        if ( btn_data.disp ) continue;
+        var btn = document.createElement('a');
+        btn.innerHTML = btn_data.id;
+        DOM.addClassName(btn, 'command-' + btn_data.id);
+        DOM.addClassName(btn, 'toolbar');
+        DOM.addClassName(btn, 'ceb-button');
+        DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
+        btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
+        btn.setAttribute('href', 'javascript: void 0;');
+        btn.setAttribute('title', btn_data.title);
+        btn.btn_id = btn_data.id;
+        btn.btn_order = i;
+        div.appendChild(btn);
+    }
+    return div;
+}
+
+var DISP_BOX = 0;
+var EXIST_BOX = 0;
 function rebuild_buttons() {
     var content = build_buttons();
     var parent = getByID('editor-content-toolbar');
     parent.removeChild(getByID('ceb-container'));
+    if (EXIST_BOX) {
+        parent.removeChild(getByID('ceb-box'));
+        EXIST_BOX = 0;
+    }
     parent.appendChild(content);
+    if (DISP_BOX) {
+        var box = build_unused_buttons();
+        parent.appendChild(box);
+        EXIST_BOX = 1;
+    }
 }
 
 function init_buttons() {
@@ -309,10 +379,19 @@ function ceb_save_ceb_prefs() {
         'uri': ScriptURI,
         'arguments': args
     });
+    ceb_sysmessage('saving prefs... ', 3);
 }
 
 function ceb_prefs_saved(c, r) {
     BTN_ORDER_CHANGED = 0;
+    ceb_sysmessage('save complete!', 3);
+}
+
+
+function ceb_toggle_box() {
+    DISP_BOX = !DISP_BOX;
+    rebuild_buttons();
+    return;
 }
 
 TC.attachLoadEvent( init_buttons );
@@ -320,9 +399,18 @@ TC.attachLoadEvent( init_buttons );
 </script>
 <style type="text/css">
 
-div.ceb-container {
+div#ceb-container {
     margin-top: 3px;
+    width: 100%;
     height: 22px;
+}
+
+div#ceb-box {
+    margin-top: 3px;
+    width: 100%;
+    height: 22px;
+    padding: 4px;
+    background-color: #abc;
 }
 
 a.ceb-button {

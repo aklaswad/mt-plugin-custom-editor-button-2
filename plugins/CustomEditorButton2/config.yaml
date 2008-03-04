@@ -61,7 +61,7 @@ buttons:
         code: |
             function ceb_deletebutton ( text, args ) {
                 var inner = getByID('title').value = args.innerHTML();
-                alert(text);
+                ceb_sysmessage('hello !!!', 5);
                 return inner;
             }
 
