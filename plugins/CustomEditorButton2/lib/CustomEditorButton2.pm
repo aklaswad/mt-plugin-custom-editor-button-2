@@ -225,18 +225,24 @@ function button_drag_end(evt) {
     x = evt.pageX - DRAG_LAYER_X;
     y = evt.pageY - DRAG_LAYER_Y;
     var container_dim = DOM.getDimensions(getByID('ceb-container'));
-    if (is_inside_of_element(x, y, container_dim)) {
-        var box_dim = DOM.getDimensions(getByID('ceb-box-button'));
-        if (is_inside_of_element(x, y, box_dim)) {
-            remove_button(btn_id);
-        }
-        else {
-            var xx = x - container_dim.offsetLeft;
-            var new_order = Math.floor( xx / 24 + 0.5);
-            if (ORIGINAL_ORDER < new_order) new_order--;
-            if (ORIGINAL_ORDER != new_order)
-                move_button(btn_id, new_order);
-        }
+    var box_dim = DOM.getDimensions(getByID('ceb-box-button'));
+    var box_area_dim;
+    if (EXIST_BOX) {
+        var box_area_dim = DOM.getDimensions(getByID('ceb-box'));
+    }
+    
+    if (is_inside_of_element(x, y, box_dim)) {
+        remove_button(btn_id);
+    }
+    else if (is_inside_of_element(x, y, container_dim)) {
+        var xx = x - container_dim.offsetLeft;
+        var new_order = Math.floor( xx / 24 + 0.5);
+        if (ORIGINAL_ORDER < new_order) new_order--;
+        if (ORIGINAL_ORDER != new_order)
+            move_button(btn_id, new_order);
+    }
+    else if (EXIST_BOX && is_inside_of_element(x, y, box_area_dim)) {
+        remove_button(btn_id);
     }
     return false;
 }
