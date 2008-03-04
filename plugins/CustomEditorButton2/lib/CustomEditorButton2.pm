@@ -83,21 +83,80 @@ __DATA__
 
 var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'} };
 
+function getOldestSiblinglessAncestor(node) {
+    if (   node.parentNode 
+        && node.nodeName != 'body'
+        && node.parentNode.childNodes.length == 1
+        && node.parentNode.nodeName != 'body' )
+        return getOldestSiblinglessAncestor(node.parentNode);
+    else
+        return node;
+}
+
+function outerHTML (node) {
+    var div = document.createElement('div');
+    div.appendChild(node);
+    return div.innerHTML;
+}
+
 MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
     if( BTNS[command] || SYS_BTNS[command] ) {
         var iframe = this.editor.mode == "iframe";
-        var text = iframe ? this.editor.iframe.getSelection()
-                          : this.editor.textarea.getSelectedText();
+        var text = "";
+        var args = {};
+        if (iframe) {
+            text = this.editor.iframe.getSelection();
+            var lazy_innerHTML = function() {
+                //return proper HTML in iframe mode;
+                var sel = this.editor.iframe.getSelection();
+                var range = sel.getRangeAt(0);
+                if (   range.startOffset == 0
+                    && range.endOffset   == range.endContainer.length ) {
+                    var container = range.commonAncestorContainer;
+                    var parent = getOldestSiblinglessAncestor(container);
+                    return outerHTML(parent.cloneNode(1));
+                }
+                else {
+                    return outerHTML(range.cloneContents());
+                }
+                return fgmt_txt;
+            };
+            args = { 'iframe': 1,
+                     'innerHTML': lazy_innerHTML,
+                     'editor': this.editor };
+        }
+        else {
+            text = this.editor.textarea.getSelectedText();
+            args = { 'iframe': 0,
+                     'innerHTML': function(){ return text },
+                     'editor': this.editor };
+        }
+
         if ( !defined( text ) )
             text = '';
         else
             text = text.toString();
         var funcname = 'ceb_' + command;
         var func = eval( funcname );
-        var args = { 'iframe': iframe };
         var res = func(text, args);
-        if ( defined( res ) )
-            this.editor.insertHTML( res );
+        if ( defined( res ) ){
+            if (typeof(res) == 'string')
+                this.editor.insertHTML( res );
+            else {
+                // res must be a DOM Node Object.
+                if(iframe){
+                    var sel = this.editor.iframe.getSelection();
+                    var rng = sel.getRangeAt(0);
+                    rng.deleteContents();
+                    rng.insertNode(res);
+                }
+                else {
+                    var div = document.createElement('div');
+                    div.appendChild(res);
+                    this.editor.insertHTML( div.innerHTML );
+                }
+            }
+        }
     }
     else {
         this.editor.execCommand( command );
@@ -134,6 +193,17 @@ function build_buttons() {
     sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_prefs.png)';
     sv.setAttribute('href', 'javascript: void 0;');
     div.appendChild(sv);
+
+    var bx = document.createElement('a');
+    bx.btn_id = 'ceb_box';
+    DOM.addClassName(bx, 'command-toggle_box');
+    DOM.addClassName(bx, 'toolbar');
+    DOM.addClassName(bx, 'ceb-button');
+    DOM.addClassName(bx, 'ceb-system-button');
+    bx.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/ceb_box.png)';
+    bx.setAttribute('href', 'javascript: void 0;');
+    div.appendChild(bx);
+
     return div;
 }
 
