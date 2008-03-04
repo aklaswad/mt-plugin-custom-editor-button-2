@@ -59,7 +59,9 @@ buttons:
         image: images/del.png
         title: wrap selection with 'del' tag
         code: |
-            function ceb_deletebutton ( text ) {
-                return '<del datetime="' + getISO8601String() + '">' + text + '</del>';
+            function ceb_deletebutton ( text, args ) {
+                var inner = getByID('title').value = args.innerHTML();
+                alert(text);
+                return inner;
             }
 

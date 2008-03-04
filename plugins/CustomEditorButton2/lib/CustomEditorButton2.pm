@@ -81,7 +81,8 @@ __DATA__
                            by Aklaswad 2008.
 */
 
-var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'} };
+var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'},
+                 'ceb_box': { id: 'ceb_box'} };
 
 function getOldestSiblinglessAncestor(node) {
     if (   node.parentNode 
