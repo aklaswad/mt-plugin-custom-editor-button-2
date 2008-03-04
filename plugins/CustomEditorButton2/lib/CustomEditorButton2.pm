@@ -61,6 +61,8 @@ sub transformer {
     my $end_block = '</script>';
     my $txt = $begin_block . build_buttons($app) . "$end_block@lines";
     $$tmpl_ref =~ s!</head>!$txt</head>!;
+
+    $$tmpl_ref =~ s!</body>!<div id="ceb-sysmessage-container"></body>!;
 }
 
 sub save_prefs {
@@ -84,6 +86,8 @@ __DATA__
 var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'},
                  'ceb_box': { id: 'ceb_box'} };
 
+/*    Utilities    */
+
 function getOldestSiblinglessAncestor(node) {
     if (   node.parentNode 
         && node.nodeName != 'body'
@@ -98,6 +102,17 @@ function outerHTML (node) {
     var div = document.createElement('div');
     div.appendChild(node);
     return div.innerHTML;
+}
+
+function ceb_sysmessage (message, timeout) {
+    var box = document.createElement('div');
+    DOM.addClassName(box, 'ceb-sysmessage');
+    box.innerHTML = message;
+    getByID('ceb-sysmessage-container').appendChild(box);
+    var remover = function(){
+        getByID('ceb-sysmessage-container').removeChild(box);
+    }
+    setTimeout(remover, timeout * 1000);
 }
 
 MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
@@ -329,6 +344,25 @@ a.ceb-button {
 
 a.ceb-system-button {
     float: right;
+}
+
+#ceb-sysmessage-container {
+    position: fixed;
+    left: 0;
+    top: 0;
+}
+
+.ceb-sysmessage {
+    position: relative;
+    width: 200px;
+    background-color: #789;
+    color: #fff;
+    text-align: left;
+    padding: 5px;
+    border-width: 0 1px 1px 1px;
+    border-style: solid;
+    border-color: #abc;
+    z-index: 10000;
 }
 
 </style>
