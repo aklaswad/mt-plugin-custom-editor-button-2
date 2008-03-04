@@ -108,7 +108,8 @@ function ceb_sysmessage (message, timeout) {
     var remover = function(){
         getByID('ceb-sysmessage-container').removeChild(box);
     }
-    setTimeout(remover, timeout * 1000);
+    if (timeout) setTimeout(remover, timeout * 1000);
+    return box;
 }
 
 
@@ -396,11 +397,14 @@ function ceb_save_ceb_prefs() {
         'uri': ScriptURI,
         'arguments': args
     });
-    ceb_sysmessage('saving prefs... ', 3);
+    var mes = ceb_sysmessage('saving prefs... ', 0);
+    mes.id = 'ceb-saving-message';
 }
 
 function ceb_prefs_saved(c, r) {
     BTN_ORDER_CHANGED = 0;
+    var mes = getByID('ceb-saving-message');
+    getByID('ceb-sysmessage-container').removeChild(mes);
     ceb_sysmessage('save complete!', 3);
 }
 
