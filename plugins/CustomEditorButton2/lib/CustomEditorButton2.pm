@@ -182,6 +182,7 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
 /*   Drag and drop system   */
 
 var DRAGGING;
+var DRAGGED;
 var DRAG_START_X;
 var DRAG_START_Y;
 var DRAG_LAYER_X;
@@ -193,6 +194,7 @@ function button_drag_start(evt) {
     DOM.addEventListener(document, 'mouseup', button_drag_end, 1);
     DOM.addEventListener(document, 'mousemove', button_drag_move, 1);
     DRAGGING = this.btn_id;
+    DRAGGED = false;
     ORIGINAL_ORDER = this.btn_order;
     DRAG_START_X = evt.pageX;
     DRAG_START_Y = evt.pageY;
@@ -204,10 +206,13 @@ function button_drag_start(evt) {
 function button_drag_move(evt) {
     if ( DRAGGING ) {
         var img = getByID('dragging-button');
-        img.style.backgroundImage = 'url(' + StaticURI + BTNS[DRAGGING].img + ')'; 
-        DOM.removeClassName(img, 'hidden');
-        img.style.left = (evt.pageX - DRAG_LAYER_X) + 'px';
-        img.style.top = (evt.pageY - DRAG_LAYER_Y) + 'px';
+        if (!DRAGGED) {
+            img.style.backgroundImage = 'url(' + StaticURI + BTNS[DRAGGING].img + ')'; 
+            DOM.removeClassName(img, 'hidden');
+            DRAGGED = true;
+        }
+        img.style.left = (evt.clientX - DRAG_LAYER_X) + 'px';
+        img.style.top = (evt.clientY - DRAG_LAYER_Y) + 'px';
     }
     return false;
 }
@@ -217,12 +222,10 @@ function button_drag_end(evt) {
     DOM.removeEventListener(document, 'mousemove', button_drag_move, 1);
     DOM.addClassName(getByID('dragging-button'), 'hidden');
     if(!DRAGGING) return true;
-    if (DRAG_START_X == evt.pageX && DRAG_START_Y == evt.pageY){
-        DRAGGING = null;
-        return true;
-    }
     var btn_id = DRAGGING;
     DRAGGING = null;
+    if (!DRAGGED) return true;
+
     x = evt.pageX - DRAG_LAYER_X;
     y = evt.pageY - DRAG_LAYER_Y;
     var container_dim = DOM.getDimensions(getByID('ceb-container'));
