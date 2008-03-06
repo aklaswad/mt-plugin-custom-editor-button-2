@@ -148,9 +148,7 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
                     rng.insertNode(res);
                 }
                 else {
-                    var div = document.createElement('div');
-                    div.appendChild(res);
-                    this.editor.insertHTML( div.innerHTML );
+                    this.editor.insertHTML( outerHTML(res) );
                 }
             }
         }
