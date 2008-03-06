@@ -60,8 +60,6 @@ buttons:
         title: wrap selection with 'del' tag
         code: |
             function ceb_deletebutton ( text, args ) {
-                var inner = getByID('title').value = args.innerHTML();
-                ceb_sysmessage('hello !!!', 5);
-                return inner;
+                return '<ins datetime="' + getISO8601String() + '">' + text + '</ins>';
             }
 
