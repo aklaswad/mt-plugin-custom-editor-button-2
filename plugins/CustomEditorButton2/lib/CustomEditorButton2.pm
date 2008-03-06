@@ -86,9 +86,9 @@ var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'},
 
 function getOldestSiblinglessAncestor(node) {
     if (   node.parentNode 
-        && node.nodeName != 'body'
+        && node.nodeName != 'BODY'
         && node.parentNode.childNodes.length == 1
-        && node.parentNode.nodeName != 'body' )
+        && node.parentNode.nodeName != 'BODY' )
         return getOldestSiblinglessAncestor(node.parentNode);
     else
         return node;
@@ -126,16 +126,7 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
                 //return proper HTML in iframe mode;
                 var sel = this.editor.iframe.getSelection();
                 var range = sel.getRangeAt(0);
-                if (   range.startOffset == 0
-                    && range.endOffset   == range.endContainer.length ) {
-                    var container = range.commonAncestorContainer;
-                    var parent = getOldestSiblinglessAncestor(container);
-                    return outerHTML(parent.cloneNode(1));
-                }
-                else {
-                    return outerHTML(range.cloneContents());
-                }
-                return fgmt_txt;
+                return outerHTML(range.cloneContents());
             };
             args = { 'iframe': 1,
                      'innerHTML': lazy_innerHTML,
