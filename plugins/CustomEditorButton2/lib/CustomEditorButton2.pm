@@ -84,16 +84,6 @@ var SYS_BTNS = { 'save_ceb_prefs': { id: 'save_ceb_prefs'},
 
 /*    Utilities    */
 
-function getOldestSiblinglessAncestor(node) {
-    if (   node.parentNode 
-        && node.nodeName != 'BODY'
-        && node.parentNode.childNodes.length == 1
-        && node.parentNode.nodeName != 'BODY' )
-        return getOldestSiblinglessAncestor(node.parentNode);
-    else
-        return node;
-}
-
 function outerHTML (node) {
     var div = document.createElement('div');
     div.appendChild(node);
