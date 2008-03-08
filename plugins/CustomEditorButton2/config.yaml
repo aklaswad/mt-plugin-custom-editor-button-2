@@ -4,7 +4,7 @@ key: CustomrEditorButton2
 author_link: http://blog.aklaswad.com/
 author_name: aklaswad
 description: add user buttons to cms entry/page editor.
-version: 0.1
+version: 0.2
 plugin_link: http://blog.aklaswad.com/mtplugins/customeditorbutton2/
 applications:
     cms:
