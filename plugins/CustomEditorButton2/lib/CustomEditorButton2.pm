@@ -285,6 +285,28 @@ function build_buttons() {
     var div = document.createElement('div');
     div.id = "ceb-container";
     DOM.addClassName(div, 'ceb-container');
+
+    var sv = document.createElement('a');
+    sv.btn_id = 'save_ceb_prefs';
+    DOM.addClassName(sv, 'command-save_ceb_prefs');
+    DOM.addClassName(sv, 'toolbar');
+    DOM.addClassName(sv, 'ceb-button');
+    DOM.addClassName(sv, 'ceb-system-button');
+    sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_prefs.png)';
+    sv.setAttribute('href', 'javascript: void 0;');
+    div.appendChild(sv);
+
+    var bx = document.createElement('a');
+    bx.btn_id = 'ceb_box';
+    bx.id = 'ceb-box-button';
+    DOM.addClassName(bx, 'command-toggle_box');
+    DOM.addClassName(bx, 'toolbar');
+    DOM.addClassName(bx, 'ceb-button');
+    DOM.addClassName(bx, 'ceb-system-button');
+    bx.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/ceb_box.png)';
+    bx.setAttribute('href', 'javascript: void 0;');
+    div.appendChild(bx);
+
     for (var i = 0;i<BTN_ORDER.length;i++) {
         var id = BTN_ORDER[i];
         var btn_data = BTNS[id];
@@ -308,28 +330,9 @@ function build_buttons() {
         btn.btn_order = i;
         div.appendChild(btn);
     }
-
-    var sv = document.createElement('a');
-    sv.btn_id = 'save_ceb_prefs';
-    DOM.addClassName(sv, 'command-save_ceb_prefs');
-    DOM.addClassName(sv, 'toolbar');
-    DOM.addClassName(sv, 'ceb-button');
-    DOM.addClassName(sv, 'ceb-system-button');
-    sv.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/save_prefs.png)';
-    sv.setAttribute('href', 'javascript: void 0;');
-    div.appendChild(sv);
-
-    var bx = document.createElement('a');
-    bx.btn_id = 'ceb_box';
-    bx.id = 'ceb-box-button';
-    DOM.addClassName(bx, 'command-toggle_box');
-    DOM.addClassName(bx, 'toolbar');
-    DOM.addClassName(bx, 'ceb-button');
-    DOM.addClassName(bx, 'ceb-system-button');
-    bx.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/ceb_box.png)';
-    bx.setAttribute('href', 'javascript: void 0;');
-    div.appendChild(bx);
-
+    var clr = document.createElement('div');
+    clr.style.clear = 'both';
+    div.appendChild(clr);
     return div;
 }
 
@@ -363,6 +366,9 @@ function build_unused_buttons() {
         btn.btn_order = i;
         div.appendChild(btn);
     }
+    var clr = document.createElement('div');
+    clr.style.clear = 'both';
+    div.appendChild(clr);
     return div;
 }
 
@@ -431,16 +437,17 @@ TC.attachLoadEvent( init_buttons );
 
 div#ceb-container {
     margin-top: 3px;
-    width: 100%;
-    height: 22px;
+    width: 562px;
+    min-height: 22px;
 }
 
 div#ceb-box {
     margin-top: 3px;
-    width: 100%;
-    height: 22px;
+    width: 554px;
     padding: 4px;
-    background-color: #abc;
+    min-height: 22px;
+    border: 1px solid #abc;
+    clear: both;
 }
 
 a.ceb-button {
@@ -449,7 +456,7 @@ a.ceb-button {
     float: left;
     width: 22px;
     height: 22px;
-    margin: 0 4px 0 0;
+    margin: 0 4px 2px 0;
     padding: 0;
     color: #000;
     text-indent: 1000em;
@@ -466,7 +473,7 @@ a.ceb-button-noimage {
     float: left;
     width: 22px;
     height: 22px;
-    margin: 0 4px 0 0;
+    margin: 0 4px 2px 0;
     padding: 0;
     color: #789;
     min-width: 0;
