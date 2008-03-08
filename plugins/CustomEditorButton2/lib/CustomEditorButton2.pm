@@ -21,11 +21,16 @@ sub build_buttons {
     foreach my $btn_id (keys %$btns) {
         my $btn = $btns->{$btn_id};
         $code .= $btn->{code} . "\n\n";
-        my $img_path = $btn->{plugin}->envelope . '/' . $btn->{image};
         $btns{$btn_id} = { id    => $btn_id,
-                           img   => $img_path,
-                           title => $btn->{title},
-                         };
+                           title => $btn->{title}, };
+        my $img_path;
+        if ( exists( $btn->{image}) ){
+            $img_path = $btn->{plugin}->envelope . '/' . $btn->{image};
+            $btns{$btn_id}->{img} = $img_path;
+        }
+        else {
+            $btns{$btn_id}->{face} = $btn->{face_text};
+        }
     }
     my $btn_json = objToJson(\%btns);
     my $order = get_order($app, $btns);
@@ -184,14 +189,23 @@ function button_drag_start(evt) {
 
 function button_drag_move(evt) {
     if ( DRAGGING ) {
-        var img = getByID('dragging-button');
+        var btn = getByID('dragging-button');
         if (!DRAGGED) {
-            img.style.backgroundImage = 'url(' + StaticURI + BTNS[DRAGGING].img + ')'; 
-            DOM.removeClassName(img, 'hidden');
+            var btn_data = BTNS[DRAGGING];
+            if (btn_data.img) {
+                btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
+                DOM.addClassName(btn, 'ceb-button');
+            }
+            else {
+                btn.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/plain_button.png)';
+                DOM.addClassName(btn, 'ceb-button-noimage');
+                btn.innerHTML = btn_data.face;
+            }
+            DOM.removeClassName(btn, 'hidden');
             DRAGGED = true;
         }
-        img.style.left = (evt.clientX - DRAG_LAYER_X) + 'px';
-        img.style.top = (evt.clientY - DRAG_LAYER_Y) + 'px';
+        btn.style.left = (evt.clientX - DRAG_LAYER_X) + 'px';
+        btn.style.top = (evt.clientY - DRAG_LAYER_Y) + 'px';
     }
     return false;
 }
@@ -278,9 +292,16 @@ function build_buttons() {
         btn.innerHTML = btn_data.id;
         DOM.addClassName(btn, 'command-' + btn_data.id);
         DOM.addClassName(btn, 'toolbar');
-        DOM.addClassName(btn, 'ceb-button');
         DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
-        btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
+        if (btn_data.img) {
+            btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
+            DOM.addClassName(btn, 'ceb-button');
+        }
+        else {
+            btn.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/plain_button.png)';
+            DOM.addClassName(btn, 'ceb-button-noimage');
+            btn.innerHTML = btn_data.face;
+        }
         btn.setAttribute('href', 'javascript: void 0;');
         btn.setAttribute('title', btn_data.title);
         btn.btn_id = btn_data.id;
@@ -324,12 +345,18 @@ function build_unused_buttons() {
         var btn_data = BTNS[i];
         if ( btn_data.disp ) continue;
         var btn = document.createElement('a');
-        btn.innerHTML = btn_data.id;
         DOM.addClassName(btn, 'command-' + btn_data.id);
         DOM.addClassName(btn, 'toolbar');
-        DOM.addClassName(btn, 'ceb-button');
+        if (btn_data.img) {
+            btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
+            DOM.addClassName(btn, 'ceb-button');
+        }
+        else {
+            btn.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/plain_button.png)';
+            DOM.addClassName(btn, 'ceb-button-noimage');
+            btn.innerHTML = btn_data.face;
+        }
         DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
-        btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
         btn.setAttribute('href', 'javascript: void 0;');
         btn.setAttribute('title', btn_data.title);
         btn.btn_id = btn_data.id;
@@ -426,6 +453,22 @@ a.ceb-button {
     padding: 0;
     color: #000;
     text-indent: 1000em;
+    min-width: 0;
+    -moz-user-select: none !important;
+    -moz-user-focus: none !important;
+    -moz-outline: none !important;
+    -khtml-user-select: none !important;
+}
+
+a.ceb-button-noimage {
+    display: block;
+    overflow: hidden;
+    float: left;
+    width: 22px;
+    height: 22px;
+    margin: 0 4px 0 0;
+    padding: 0;
+    color: #789;
     min-width: 0;
     -moz-user-select: none !important;
     -moz-user-focus: none !important;
