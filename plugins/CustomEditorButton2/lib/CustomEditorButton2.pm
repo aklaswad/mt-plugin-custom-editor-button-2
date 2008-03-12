@@ -111,17 +111,26 @@ function ceb_sysmessage (message, timeout) {
 /* Command Handler */
 
 MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
+    var isMSIE = /*@cc_on!@*/false;
     if( BTNS[command] || SYS_BTNS[command] ) {
         var iframe = this.editor.mode == "iframe";
         var text = "";
         var args = {};
         if (iframe) {
-            text = this.editor.iframe.getSelection();
+            var doc = this.editor.iframe;
+            var sel = doc.getSelection();
+            text = isMSIE ? sel.createRange().text : sel.toString();
             var lazy_innerHTML = function() {
                 //return proper HTML in iframe mode;
-                var sel = this.editor.iframe.getSelection();
-                var range = sel.getRangeAt(0);
-                return outerHTML(range.cloneContents());
+                var rng;
+                if (isMSIE) {
+                    rng = sel.createRange();
+                    return rng.htmlText;
+                }
+                else {
+                    rng = sel.getRangeAt(0);
+                    return outerHTML(rng.cloneContents());
+                }
             };
             args = { 'iframe': 1,
                      'innerHTML': lazy_innerHTML,
@@ -136,8 +145,6 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
 
         if ( !defined( text ) )
             text = '';
-        else
-            text = text.toString();
         var funcname = 'ceb_' + command;
         var func = eval( funcname );
         var res = func(text, args);
@@ -147,8 +154,8 @@ MT.App.Editor.Toolbar.prototype.extendedCommand = function( command, event ) {
             else {
                 // res must be a DOM Node Object.
                 if(iframe){
-                    var sel = this.editor.iframe.getSelection();
-                    var rng = sel.getRangeAt(0);
+                    var sel = doc.getSelection();
+                    var rng = isMSIE ? sel.createRange() : sel.getRangeAt(0);
                     rng.deleteContents();
                     rng.insertNode(res);
                 }
