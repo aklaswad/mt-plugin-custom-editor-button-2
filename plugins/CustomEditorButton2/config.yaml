@@ -60,6 +60,6 @@ buttons:
         title: wrap selection with 'del' tag
         code: |
             function ceb_deletebutton ( text, args ) {
-                return '<ins datetime="' + getISO8601String() + '">' + text + '</ins>';
+                return '<del datetime="' + getISO8601String() + '">' + text + '</del>';
             }
 
