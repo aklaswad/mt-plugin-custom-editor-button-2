@@ -181,13 +181,40 @@ var DRAG_LAYER_Y;
 var ORIGINAL_ORDER;
 var BTN_ORDER_CHANGED = 0;
 
+// fixed version of mt_core DOM.getMouseEventAttribute() 
+function getMouseEventAttribute2( ev, a ) {
+    if( !a )
+        return;
+    target = ev.target || ev.srcElement;
+    var es = DOM.getAncestors( target, true );
+    //% for( var i = 0; i < es.length; i++ ) {
+    //%     var e = es[ i ];
+    for( var en = new Enumerator( es ); !en.atEnd(); en.moveNext() ) {
+        var e = en.item();
+        try {
+            var v = e.getAttribute ? e.getAttribute( a ) : null;
+            if( v ) {
+                ev.attributeElement = e;
+                ev.attribute = v;
+                return v;
+            }
+        } catch( e ) {}
+    }
+}
+
 function button_drag_start(evt) {
     DOM.addEventListener(document, 'mouseup', button_drag_end, 1);
     DOM.addEventListener(document, 'mousemove', button_drag_move, 1);
-    var btn = evt.target || evt.srcElement;
-    DRAGGING = btn.btn_id;
+    
+    DRAGGING = getMouseEventAttribute2(evt, 'mt:draggable');
     DRAGGED = false;
-    ORIGINAL_ORDER = btn.btn_order;
+    ORIGINAL_ORDER = undefined;
+    for (var i = 0; i<BTN_ORDER.length; i++) {
+        if (BTN_ORDER[i] == DRAGGING) {
+            ORIGINAL_ORDER = i;
+            break;
+        }
+    }
     var isMSIE = /*@cc_on!@*/false;
     if (isMSIE) {
         DRAG_START_X = evt.x + document.body.scrollLeft;
@@ -273,7 +300,9 @@ function button_drag_end(evt) {
     else if (is_inside_of_element(x, y, container_dim)) {
         var xx = x - container_dim.absoluteLeft;
         var new_order = Math.floor( xx / 24 + 0.5);
-        if (ORIGINAL_ORDER < new_order) new_order--;
+        if (defined(ORIGINAL_ORDER)) {
+            if (ORIGINAL_ORDER < new_order) new_order--;
+        }
         if (ORIGINAL_ORDER != new_order)
             move_button(btn_id, new_order);
     }
@@ -366,6 +395,7 @@ function build_buttons() {
         btn.setAttribute('href', 'javascript: void 0;');
         btn.setAttribute('title', btn_data.title);
         btn.btn_id = btn_data.id;
+        btn.setAttribute('mt:draggable', btn_data.id);
         btn.btn_order = i;
         div.appendChild(btn);
     }
@@ -401,6 +431,7 @@ function build_unused_buttons() {
         DOM.addEventListener( btn, 'mousedown', button_drag_start, 1 );
         btn.setAttribute('href', 'javascript: void 0;');
         btn.setAttribute('title', btn_data.title);
+        btn.setAttribute('mt:draggable', btn_data.id);
         btn.btn_id = btn_data.id;
         btn.btn_order = i;
         div.appendChild(btn);
