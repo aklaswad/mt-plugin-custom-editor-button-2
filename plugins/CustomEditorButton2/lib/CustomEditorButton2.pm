@@ -63,7 +63,7 @@ sub transformer {
     my $txt = $begin_block . build_buttons($app) . "$end_block@lines";
     $$tmpl_ref =~ s!</head>!$txt</head>!;
 
-    $$tmpl_ref =~ s!</body>!<div id="ceb-sysmessage-container"><a id="dragging-button" class="hidden"></a></body>!;
+    $$tmpl_ref =~ s!</body>!<div id="ceb-sysmessage-container"></div><a id="dragging-button" class="hidden"></a></body>!;
 }
 
 sub save_prefs {
@@ -184,13 +184,23 @@ var BTN_ORDER_CHANGED = 0;
 function button_drag_start(evt) {
     DOM.addEventListener(document, 'mouseup', button_drag_end, 1);
     DOM.addEventListener(document, 'mousemove', button_drag_move, 1);
-    DRAGGING = this.btn_id;
+    var btn = evt.target || evt.srcElement;
+    DRAGGING = btn.btn_id;
     DRAGGED = false;
-    ORIGINAL_ORDER = this.btn_order;
-    DRAG_START_X = evt.pageX;
-    DRAG_START_Y = evt.pageY;
-    DRAG_LAYER_X = evt.layerX;
-    DRAG_LAYER_Y = evt.layerY;
+    ORIGINAL_ORDER = btn.btn_order;
+    var isMSIE = /*@cc_on!@*/false;
+    if (isMSIE) {
+        DRAG_START_X = evt.x + document.body.scrollLeft;
+        DRAG_START_Y = evt.y + document.body.scrollTop;
+        DRAG_LAYER_X = evt.offsetX;
+        DRAG_LAYER_Y = evt.offsetY;
+    }
+    else {
+        DRAG_START_X = evt.pageX;
+        DRAG_START_Y = evt.pageY;
+        DRAG_LAYER_X = evt.layerX;
+        DRAG_LAYER_Y = evt.layerY;
+    }
     return true;
 }
 
@@ -202,6 +212,7 @@ function button_drag_move(evt) {
             if (btn_data.img) {
                 btn.style.backgroundImage = 'url(' + StaticURI + btn_data.img + ')';
                 DOM.addClassName(btn, 'ceb-button');
+                btn.style.position = 'absolute';
             }
             else {
                 btn.style.backgroundImage = 'url(' + StaticURI + 'plugins/CustomEditorButton2/images/plain_button.png)';
@@ -211,8 +222,19 @@ function button_drag_move(evt) {
             DOM.removeClassName(btn, 'hidden');
             DRAGGED = true;
         }
-        btn.style.left = (evt.clientX - DRAG_LAYER_X) + 'px';
-        btn.style.top = (evt.clientY - DRAG_LAYER_Y) + 'px';
+        var isMSIE = /*@cc_on!@*/false;
+        var x,y;
+        if (isMSIE) {
+            var pos = DOM.getAbsoluteCursorPosition(evt);
+            x = pos.x;
+            y = pos.y;
+        }
+        else {
+            x = evt.pageX;
+            y = evt.pageY;
+        }
+        btn.style.left = (x - DRAG_LAYER_X) + 'px';
+        btn.style.top = (y - DRAG_LAYER_Y) + 'px';
     }
     return false;
 }
@@ -226,20 +248,30 @@ function button_drag_end(evt) {
     DRAGGING = null;
     if (!DRAGGED) return true;
 
-    x = evt.pageX - DRAG_LAYER_X;
-    y = evt.pageY - DRAG_LAYER_Y;
-    var container_dim = DOM.getDimensions(getByID('ceb-container'));
-    var box_dim = DOM.getDimensions(getByID('ceb-box-button'));
+    var isMSIE = /*@cc_on!@*/false;
+    var x,y;
+    if (isMSIE) {
+        var pos = DOM.getAbsoluteCursorPosition(evt);
+        x = pos.x - DRAG_LAYER_X;
+        y = pos.y - DRAG_LAYER_Y;
+    }
+    else {
+        x = evt.pageX - DRAG_LAYER_X;
+        y = evt.pageY - DRAG_LAYER_Y;
+    }
+
+    var container_dim = DOM.getAbsoluteDimensions(getByID('ceb-container'));
+    var box_dim = DOM.getAbsoluteDimensions(getByID('ceb-box-button'));
     var box_area_dim;
     if (EXIST_BOX) {
-        var box_area_dim = DOM.getDimensions(getByID('ceb-box'));
+        var box_area_dim = DOM.getAbsoluteDimensions(getByID('ceb-box'));
     }
     
     if (is_inside_of_element(x, y, box_dim)) {
         remove_button(btn_id);
     }
     else if (is_inside_of_element(x, y, container_dim)) {
-        var xx = x - container_dim.offsetLeft;
+        var xx = x - container_dim.absoluteLeft;
         var new_order = Math.floor( xx / 24 + 0.5);
         if (ORIGINAL_ORDER < new_order) new_order--;
         if (ORIGINAL_ORDER != new_order)
@@ -252,8 +284,8 @@ function button_drag_end(evt) {
 }
 
 function is_inside_of_element(x, y, dim) {
-    var xx = x - dim.offsetLeft;
-    var yy = y - dim.offsetTop;
+    var xx = x - dim.absoluteLeft;
+    var yy = y - dim.absoluteTop;
     if ( xx < -22 || dim.offsetWidth < xx || yy < -22 || dim.offsetHeight < yy )
         return false;
     return true;
@@ -457,7 +489,7 @@ div#ceb-box {
     clear: both;
 }
 
-a.ceb-button {
+.ceb-button {
     display: block;
     overflow: hidden;
     float: left;
@@ -474,7 +506,7 @@ a.ceb-button {
     -khtml-user-select: none !important;
 }
 
-a.ceb-button-noimage {
+.ceb-button-noimage {
     display: block;
     overflow: hidden;
     float: left;
@@ -497,7 +529,7 @@ a.ceb-system-button {
 #dragging-button {
     width: 22px;
     height: 22px;
-    position: fixed;
+    position: absolute;
     z-index: 10001;
 }
 
