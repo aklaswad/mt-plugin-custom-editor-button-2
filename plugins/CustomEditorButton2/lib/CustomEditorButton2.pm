@@ -6,11 +6,14 @@ use MT::Author;
 # Say hey, but we really just wanted the module loaded.
 sub init_app { 1 }
 
-MT::Author->install_meta({
-    columns => [
-        'ceb_order',
-    ],
-});
+#MT::Author->install_meta({
+    #column_defs => {
+    #    'ceb.button_order' => 'text',
+    #},
+#    fields     => [
+#        { name => 'button_order', type => 'vchar', key => 1 },
+#    ],
+#});
 
 sub build_buttons {
     my $app = shift;
@@ -41,7 +44,7 @@ sub build_buttons {
 sub get_order {
     my ($app, $btns) = @_;
     my @order;
-    if (my $saved = $app->user->meta('ceb_button_order')) {
+    if (my $saved = $app->user->button_order) {
         @order = split /:/, $saved;
         @order = grep { exists $btns->{$_} } @order;
     }
@@ -69,7 +72,7 @@ sub transformer {
 sub save_prefs {
     my $app = shift;
     my $order = $app->param('order');
-    $app->user->meta('ceb_button_order', $order);
+    $app->user->button_order($order) or die 'saving button order failed';
     $app->user->save;
     $app->json_result({}); 
 }

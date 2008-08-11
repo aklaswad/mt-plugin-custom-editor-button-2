@@ -6,6 +6,9 @@ author_name: aklaswad
 description: add user buttons to cms entry/page editor.
 version: 0.2
 plugin_link: http://blog.aklaswad.com/mtplugins/customeditorbutton2/
+object_types:
+    author:
+        button_order: string meta
 applications:
     cms:
         methods:
