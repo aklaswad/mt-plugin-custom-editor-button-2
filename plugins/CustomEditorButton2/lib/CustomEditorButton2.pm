@@ -6,18 +6,6 @@ use MT::Author;
 
 my $new_meta = MT::Plugin::CustomEditorButton2->new_meta;
 
-<<<<<<< .mine
-=======
-#MT::Author->install_meta({
-    #column_defs => {
-    #    'ceb.button_order' => 'text',
-    #},
-#    fields     => [
-#        { name => 'button_order', type => 'vchar', key => 1 },
-#    ],
-#});
-
->>>>>>> .r383
 sub build_buttons {
     my $app = shift;
     my $btns = $app->registry('buttons');
@@ -47,14 +35,10 @@ sub build_buttons {
 sub get_order {
     my ($app, $btns) = @_;
     my @order;
-<<<<<<< .mine
     my $saved = $new_meta ? $app->user->ceb_button_order
                           : $app->user->meta('ceb_button_order');
         
     if ( $saved ) {
-=======
-    if (my $saved = $app->user->button_order) {
->>>>>>> .r383
         @order = split /:/, $saved;
         @order = grep { exists $btns->{$_} } @order;
     }
@@ -82,16 +66,12 @@ sub transformer {
 sub save_prefs {
     my $app = shift;
     my $order = $app->param('order');
-<<<<<<< .mine
     if ( $new_meta ) {
         $app->user->ceb_button_order($order);
     }
     else {
         $app->user->meta('ceb_button_order', $order);
     }
-=======
-    $app->user->button_order($order) or die 'saving button order failed';
->>>>>>> .r383
     $app->user->save;
     $app->json_result({}); 
 }
