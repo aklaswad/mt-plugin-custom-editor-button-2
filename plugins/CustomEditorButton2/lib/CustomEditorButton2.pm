@@ -50,17 +50,27 @@ sub get_order {
     return \@order;
 }
 
-sub transformer {
-    my ($eh, $app, $tmpl_ref) = @_;
-    my @buttons;
-    my @lines = <DATA>;
+{
+    use vars qw ( $builtin_code );
 
-    my $begin_block = '<script type="text/javascript">';
-    my $end_block = '</script>';
-    my $txt = $begin_block . build_buttons($app) . "$end_block@lines";
-    $$tmpl_ref =~ s!</head>!$txt</head>!;
+    sub load_builtin_code {
+        local $/;
+        $builtin_code = <DATA>;
+    }
 
-    $$tmpl_ref =~ s!</body>!<div id="ceb-sysmessage-container"></div><a id="dragging-button" class="hidden"></a></body>!;
+    sub transformer {
+        my ($eh, $app, $tmpl_ref) = @_;
+        my @buttons;
+        &load_builtin_code unless $builtin_code;
+
+        my $begin_block = '<script type="text/javascript">';
+        my $end_block = '</script>';
+        my $txt = $begin_block . build_buttons($app) . "$end_block$builtin_code";
+        $$tmpl_ref =~ s!</head>!$txt</head>!;
+
+        $$tmpl_ref =~ s!</body>!<div id="ceb-sysmessage-container"></div><a id="dragging-button" class="hidden"></a></body>!;
+    }
+
 }
 
 sub save_prefs {

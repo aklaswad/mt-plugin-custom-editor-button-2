@@ -6,7 +6,7 @@ use MT::Plugin;
 use base qw( MT::Plugin );
 use vars qw( $PLUGIN_NAME $VERSION );
 $PLUGIN_NAME = 'Custom Editor Button 2';
-$VERSION = 0.3;
+$VERSION = 0.31;
 
 my $plugin = new MT::Plugin::CustomEditorButton2({
     name => $PLUGIN_NAME,
