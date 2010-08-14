@@ -519,13 +519,11 @@ TC.attachLoadEvent( init_buttons );
 
 div#ceb-container {
     margin-top: 3px;
-    width: 562px;
     min-height: 22px;
 }
 
 div#ceb-box {
     margin-top: 3px;
-    width: 554px;
     padding: 4px;
     min-height: 22px;
     border: 1px solid #abc;
@@ -594,5 +592,4 @@ a.ceb-system-button {
     border-color: #abc;
     z-index: 10000;
 }
-
 </style>
